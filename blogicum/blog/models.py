@@ -6,7 +6,7 @@ from blog.constants import MAX_LENGTH_RENDER_TITLE, MAX_LENGTH_TITLE
 User = get_user_model()
 
 
-class Category(PublishedAndCreatedModel, models.Model):
+class Category(PublishedAndCreatedModel):
     """Модель категории."""
 
     title = models.CharField('Заголовок', max_length=MAX_LENGTH_TITLE)
@@ -29,7 +29,7 @@ class Category(PublishedAndCreatedModel, models.Model):
         return self.title[:MAX_LENGTH_RENDER_TITLE]
 
 
-class Location(PublishedAndCreatedModel, models.Model):
+class Location(PublishedAndCreatedModel):
     """Модель локации."""
 
     name = models.CharField('Название места', max_length=MAX_LENGTH_TITLE)
@@ -45,7 +45,7 @@ class Location(PublishedAndCreatedModel, models.Model):
         return self.name[:MAX_LENGTH_RENDER_TITLE]
 
 
-class Post(PublishedAndCreatedModel, models.Model):
+class Post(PublishedAndCreatedModel):
     """Модель поста."""
 
     title = models.CharField('Заголовок', max_length=MAX_LENGTH_TITLE,)
@@ -77,6 +77,12 @@ class Post(PublishedAndCreatedModel, models.Model):
         verbose_name='Категория'
     )
 
+    image = models.ImageField(
+        upload_to='picture_posts/',
+        null=True,
+        blank=True
+        )
+
     class Meta:
         """Метакласс."""
 
@@ -89,17 +95,7 @@ class Post(PublishedAndCreatedModel, models.Model):
         return self.title[:MAX_LENGTH_RENDER_TITLE]
 
 
-class Picture(models.Model):
-    """Модель изображения."""
-
-    image = models.ImageField(
-        upload_to='picture_posts/',
-        null=True,
-        blank=True
-        )
-
-
-class Comment(Post, models.Model):
+class Comment(models.Model):
     """Модель комментариев."""
 
     text = models.TextField('Комментарий')
@@ -114,4 +110,4 @@ class Comment(Post, models.Model):
     class Meta:
         """Метакласс."""
 
-        ordering = ('created_at')
+        ordering = ('created_at',)

@@ -10,6 +10,9 @@ from blog.forms import PostForm, CommentForm
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
+from django.utils import timezone
+
+NOW = timezone.now()
 
 
 def index(request: HttpRequest) -> HttpResponse:
@@ -120,7 +123,7 @@ class PostListView(ListView):
     model = Post
     template_name = 'blog/index.html'
     context_object_name = 'posts'
-    paginate_by = POST_PER_PAGE
+    paginate_by = MAX_POSTS_PAGE
 
     def get_queryset(self):
         queryset = (

@@ -22,8 +22,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_bootstrap5',
-    'django.contrib.auth.urls',
-    'django.contrib.auth.forms',
 ]
 
 MIDDLEWARE = [
@@ -113,3 +111,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.<тип бэкенда>.EmailBackend'
 
 
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
+
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'blog:index'
+CSRF_FAILURE_VIEW = 'pages.views.csrf_failure'
