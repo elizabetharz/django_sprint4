@@ -1,14 +1,13 @@
-from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from django.views.generic import TemplateView
 
 
 class AboutPage(TemplateView):
-    template_name = "pages/about.html"
+    template_name = 'pages/about.html'
 
 
 class RulesPage(TemplateView):
-    template_name = "pages/rules.html"
+    template_name = 'pages/rules.html'
 
 
 def page_not_found(request, exception):

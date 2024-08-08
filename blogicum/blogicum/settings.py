@@ -104,14 +104,14 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
+MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 
 EMAIL_BACKEND = 'django.core.mail.backends.<тип бэкенда>.EmailBackend'
-
-
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'blog:index'
+
 CSRF_FAILURE_VIEW = 'pages.views.csrf_failure'

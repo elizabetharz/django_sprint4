@@ -25,9 +25,15 @@ class PostDetailView(DetailView):
     """CBV полной информации постов."""
 
     model = Post
-    form_class = PostForm
     template_name = 'blog/detail.html'
-    success_url = reverse_lazy('post:list')
+    pk_url_kwarg = 'post_id'
+
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(
+            **kwargs,
+            form=CommentForm(),
+            comments=self.object.comments.select_related('author')
+        )
 
 
 def category_posts(request: HttpRequest, category_slug: str) -> HttpResponse:
@@ -45,6 +51,7 @@ def category_posts(request: HttpRequest, category_slug: str) -> HttpResponse:
     )
 
 
+# Доступно администратору
 class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     """CBV для определения админа."""
 
@@ -74,14 +81,10 @@ class LocationCreateView(AdminRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
+# Профиль
 def profile_form(request):
     """Страница пользователя."""
     return render(request, 'blog/profile.html')
-
-
-def profile_registration(request):
-    """Страница регистрации пользователя."""
-    return render(request, 'registration/registration_form.html')
 
 
 @login_required
@@ -90,12 +93,7 @@ def edit_profile(request):
     return render(request, 'blog/user.html')
 
 
-@login_required
-def change_password(request):
-    """Страница смены пароля."""
-    return render(request, 'registration/password_change_form.html')
-
-
+# Пагинация
 class IndexListView(ListView):
     """CBV пагинации главной страницы."""
 
@@ -117,6 +115,7 @@ class CategoryListView(ListView):
     paginator = Paginator(category, 10)
 
 
+# Посты
 class PostListView(ListView):
     """CBV поста."""
 
@@ -166,6 +165,7 @@ class PostDeleteView(LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy('post:list')
 
 
+# Комментарии
 class CommentMixin:
     """Класс миксин для комментариев."""
 

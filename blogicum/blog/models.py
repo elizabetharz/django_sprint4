@@ -79,7 +79,6 @@ class Post(PublishedAndCreatedModel):
 
     image = models.ImageField(
         upload_to='picture_posts/',
-        null=True,
         blank=True
         )
 

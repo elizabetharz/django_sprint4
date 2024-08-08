@@ -10,8 +10,3 @@ urlpatterns = [
     path('rules/', views.RulesPage.as_view(), name='rules'),
 
 ]
-
-
-handler404 = 'pages.views.page_not_found'
-
-handler500 = 'pages.views.internal_server_error'
