@@ -1,5 +1,3 @@
-from typing import Any
-from django.db.models.base import Model as Model
 from django.shortcuts import get_object_or_404, redirect
 from blog.constants import MAX_POSTS_PAGE
 from blog.models import Category, Post, Comment, User
@@ -9,6 +7,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.db.models import Count
+from django.views.generic.edit import FormMixin
+from django.urls import reverse
 
 
 class IndexListView(ListView):
@@ -36,7 +36,7 @@ class IndexListView(ListView):
         return queryset
 
 
-class PostDetailView(DetailView):
+class PostDetailView(FormMixin,DetailView):
     """CBV полной информации постов."""
 
     model = Post
@@ -125,7 +125,7 @@ class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, PostMixin, UpdateV
         )
 
 
-class PostDeleteView(LoginRequiredMixin, PostMixin, DeleteView):
+class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, PostMixin, DeleteView):
     """CBV удаления публикации."""
 
     def test_func(self):
@@ -154,7 +154,7 @@ class CommentMixin:
 
     def get_success_url(self):
         return reverse_lazy(
-            'blog:post_detail', kwargs={'post_id': self.kwargs['post_id']}
+            'blog:post_detail', kwargs={"post_id": self.kwargs['post_id']}
         )
 
 

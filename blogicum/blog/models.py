@@ -2,8 +2,25 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from core.models import PublishedAndCreatedModel
 from blog.constants import MAX_LENGTH_RENDER_TITLE, MAX_LENGTH_TITLE
+from django.utils import timezone
+from django.urls import reverse_lazy
 
 User = get_user_model()
+
+
+class PostModel(models.Model):
+
+    is_published = models.BooleanField(
+        default=True,
+        help_text="Снимите галочку, чтобы скрыть публикацию.",
+        verbose_name="Опубликовано",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name="Добавлено"
+    )
+
+    class Meta:
+        abstract = True
 
 
 class Category(PublishedAndCreatedModel):
@@ -53,12 +70,12 @@ class Post(PublishedAndCreatedModel):
     pub_date = models.DateTimeField(
         'Дата и время публикации',
         help_text=('Если установить дату и время в будущем — '
-                   'можно делать отложенные публикации.')
+                   'можно делать отложенные публикации.'),
+        default=timezone.now
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='posts',
         verbose_name='Автор публикации',
     )
     location = models.ForeignKey(
@@ -66,20 +83,19 @@ class Post(PublishedAndCreatedModel):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name='posts',
         verbose_name='Местоположение'
     )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
         null=True,
-        related_name='posts',
         verbose_name='Категория'
     )
 
     image = models.ImageField(
         upload_to='picture_posts/',
-        blank=True
+        blank=True,
+        verbose_name='Изображение'
         )
 
     class Meta:
@@ -93,10 +109,15 @@ class Post(PublishedAndCreatedModel):
         """Строковое представление объекта."""
         return self.title[:MAX_LENGTH_RENDER_TITLE]
 
+    def get_absolute_url(self):
+        return reverse_lazy(
+            "blog:profile", kwargs={"username": self.request.user.username}
+        )
+
 
 class Comment(models.Model):
     """Модель комментариев."""
-
+    
     text = models.TextField('Комментарий')
     comment = models.ForeignKey(
         Post,
