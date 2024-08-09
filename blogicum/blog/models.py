@@ -99,7 +99,7 @@ class Post(PublishedAndCreatedModel):
         upload_to='picture_posts/',
         blank=True,
         verbose_name='Изображение'
-        )
+    )
 
     class Meta:
         """Метакласс."""

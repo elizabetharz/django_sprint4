@@ -121,7 +121,7 @@ class PostCreateView(LoginRequiredMixin, PostMixin, CreateView):
 
 class PostUpdateView(
     LoginRequiredMixin, UserPassesTestMixin, PostMixin, UpdateView
-        ):
+):
     """CBV для редактирования поста."""
 
     def test_func(self):
@@ -146,7 +146,7 @@ class PostUpdateView(
 
 class PostDeleteView(
     LoginRequiredMixin, UserPassesTestMixin, PostMixin, DeleteView
-        ):
+):
     """CBV удаления публикации."""
 
     def test_func(self):
@@ -186,7 +186,7 @@ class CommentMixin:
 
 class CommentCreateView(
     LoginRequiredMixin, CommentMixin, PostMixin, CreateView
-        ):
+):
     """CBV добавления комментария."""
 
     def dispatch(self, request, *args, **kwargs):
@@ -207,7 +207,7 @@ class CommentCreateView(
 
 class CommentUpdateView(
     LoginRequiredMixin, UserPassesTestMixin, CommentMixin, UpdateView
-        ):
+):
     """CBV для редактирования комментария."""
 
     pk_url_kwarg = "comment_id"
@@ -224,7 +224,7 @@ class CommentUpdateView(
 
 class CommentDeleteView(
     LoginRequiredMixin, UserPassesTestMixin, CommentMixin, DeleteView
-        ):
+):
     """CBV комментария."""
 
     pk_url_kwarg = "comment_id"
