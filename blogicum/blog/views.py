@@ -82,7 +82,7 @@ class CategoryView(ListView):
             is_published=True,
             category__is_published=True,
             pub_date__date__lte=timezone.now()
-            )
+        )
         )
 
     def get_context_data(self, **kwargs):
