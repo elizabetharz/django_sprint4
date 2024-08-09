@@ -1,10 +1,11 @@
 from django.contrib import admin
-
 from blog.models import Category, Location, Post
 
 
 @admin.register(Location)
 class LocationAdmin(admin.ModelAdmin):
+    """Класс локации."""
+
     list_display = (
         'name',
         'is_published',
@@ -18,6 +19,8 @@ class LocationAdmin(admin.ModelAdmin):
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
+    """Класс поста."""
+
     list_display = (
         'title',
         'text',
@@ -39,6 +42,8 @@ class PostAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
+    """Класс категории."""
+
     list_display = (
         'title',
         'description',

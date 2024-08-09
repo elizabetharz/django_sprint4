@@ -9,17 +9,20 @@ User = get_user_model()
 
 
 class PostModel(models.Model):
+    """Модель поста."""
 
     is_published = models.BooleanField(
         default=True,
-        help_text="Снимите галочку, чтобы скрыть публикацию.",
-        verbose_name="Опубликовано",
+        help_text='Снимите галочку, чтобы скрыть публикацию.',
+        verbose_name='Опубликовано',
     )
     created_at = models.DateTimeField(
-        auto_now_add=True, verbose_name="Добавлено"
+        auto_now_add=True, verbose_name='Добавлено'
     )
 
     class Meta:
+        """Метакласс."""
+
         abstract = True
 
 
@@ -110,16 +113,17 @@ class Post(PublishedAndCreatedModel):
         return self.title[:MAX_LENGTH_RENDER_TITLE]
 
     def get_absolute_url(self):
+        """Функция переадресацции."""
         return reverse_lazy(
-            "blog:profile", kwargs={"username": self.request.user.username}
+            'blog:profile', kwargs={'username': self.request.user.username}
         )
 
 
 class Comment(models.Model):
     """Модель комментариев."""
-    
+
     text = models.TextField('Комментарий')
-    comment = models.ForeignKey(
+    post = models.ForeignKey(
         Post,
         on_delete=models.CASCADE,
         related_name='comments',
