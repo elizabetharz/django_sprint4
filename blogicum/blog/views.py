@@ -145,7 +145,7 @@ class PostDeleteView(
 
 # Комментарии
 class CommentCreateView(
-    LoginRequiredMixin,  CommentMixin, PostMixin, CreateView
+    LoginRequiredMixin, CommentMixin, PostMixin, CreateView
 ):
     """CBV добавления комментария."""
 
