@@ -1,5 +1,6 @@
 from django.contrib import admin
-from blog.models import Category, Location, Post
+
+from blog.models import Category, Comment, Location, Post
 
 
 @admin.register(Location)
@@ -55,3 +56,10 @@ class CategoryAdmin(admin.ModelAdmin):
         'description',
         'is_published',
     )
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    """Класс комментария."""
+
+    list_display = ["post", "author", "created_at", "short_text"]

@@ -1,15 +1,16 @@
-from django.db import models
-from django.contrib.auth import get_user_model
 from core.models import PublishedAndCreatedModel
-from blog.constants import MAX_LENGTH_RENDER_TITLE, MAX_LENGTH_TITLE
+from django.contrib.auth import get_user_model
+from django.db import models
+from django.urls import reverse
 from django.utils import timezone
-from django.urls import reverse_lazy
+
+from blog.constants import MAX_LENGTH_RENDER_TITLE, MAX_LENGTH_TITLE
 
 User = get_user_model()
 
 
 class PostModel(models.Model):
-    """Модель поста."""
+    """Абстрактная модель."""
 
     is_published = models.BooleanField(
         default=True,
@@ -114,7 +115,7 @@ class Post(PublishedAndCreatedModel):
 
     def get_absolute_url(self):
         """Функция переадресацции."""
-        return reverse_lazy(
+        return reverse(
             'blog:profile', kwargs={'username': self.request.user.username}
         )
 
@@ -134,4 +135,10 @@ class Comment(models.Model):
     class Meta:
         """Метакласс."""
 
+        verbose_name = 'комментарии'
+        verbose_name_plural = 'Комментарии'
         ordering = ('created_at',)
+
+    def __str__(self) -> str:
+        """Строковое представление объекта."""
+        return self.title[:MAX_LENGTH_RENDER_TITLE]

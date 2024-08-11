@@ -1,17 +1,16 @@
-from django.shortcuts import get_object_or_404, redirect
-from blog.constants import MAX_POSTS_PAGE
-from blog.models import Category, Post, Comment, User
-from blog.forms import PostForm, CommentForm
-from django.views.generic import (
-    CreateView, UpdateView, DeleteView, DetailView, ListView
-)
-from django.contrib.auth.mixins import (
-    LoginRequiredMixin, UserPassesTestMixin
-)
-from django.urls import reverse_lazy
-from django.utils import timezone
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count
+from django.shortcuts import get_object_or_404
+from django.urls import reverse
+from django.utils import timezone
+from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
+                                  UpdateView)
 from django.views.generic.edit import FormMixin
+
+from blog.constants import MAX_POSTS_PAGE
+from blog.forms import CommentForm, PostForm
+from blog.mixins import AuthorMixin, CommentMixin, PostMixin
+from blog.models import Category, Post, User
 
 
 class IndexListView(ListView):
@@ -21,7 +20,7 @@ class IndexListView(ListView):
     template_name = 'blog/index.html'
     paginate_by = MAX_POSTS_PAGE
 
-    def get_queryset(self, queryset=None):
+    def get_queryset(self):
         """Метод queryset."""
         return (
             Post.objects.select_related(
@@ -75,16 +74,6 @@ class CategoryView(ListView):
     template_name = 'blog/category.html'
     paginate_by = MAX_POSTS_PAGE
 
-    def get_queryset(self):
-        """Метод queryset."""
-        return (Post.objects.filter(
-            category__slug=self.kwargs['category_slug'],
-            is_published=True,
-            category__is_published=True,
-            pub_date__date__lte=timezone.now()
-        )
-        )
-
     def get_context_data(self, **kwargs):
         """Фунция передачи данных контекста."""
         context = super().get_context_data(**kwargs)
@@ -93,17 +82,22 @@ class CategoryView(ListView):
         )
         return context
 
+    def get_queryset(self):
+        """Метод queryset."""
+        return (
+            Post.objects.select_related('category')
+            .filter(
+                category__slug=self.kwargs['category_slug'],
+                is_published=True,
+                category__is_published=True,
+                pub_date__lte=timezone.now()
+            )
+            .annotate(comment_count=Count('comments'))
+            .order_by('-pub_date')
+        )
+
 
 # Посты
-class PostMixin:
-    """Класс Mixin для постов."""
-
-    model = Post
-    form_class = PostForm
-    template_name = 'blog/create.html'
-    pk_url_kwarg = 'post_id'
-
-
 class PostCreateView(LoginRequiredMixin, PostMixin, CreateView):
     """CBV для добавления поста."""
 
@@ -114,48 +108,27 @@ class PostCreateView(LoginRequiredMixin, PostMixin, CreateView):
 
     def get_success_url(self):
         """Функция для переадресации пользователя."""
-        return reverse_lazy(
+        return reverse(
             'blog:profile', kwargs={'username': self.request.user.username}
         )
 
 
 class PostUpdateView(
-    LoginRequiredMixin, UserPassesTestMixin, PostMixin, UpdateView
+    LoginRequiredMixin, AuthorMixin, PostMixin, UpdateView
 ):
     """CBV для редактирования поста."""
 
-    def test_func(self):
-        """Функция для проверки автора."""
-        return self.get_object().author == self.request.user
-
-    def handle_no_permission(self):
-        """Если пользователь не автор."""
-        return redirect('blog:post_detail', post_id=self.get_object().pk)
-
-    def form_valid(self, form):
-        """Проверка валидности."""
-        form.instance.author = self.request.user
-        return super().form_valid(form)
-
     def get_success_url(self):
         """Функция для переадресации пользователя."""
-        return reverse_lazy(
+        return reverse(
             'blog:post_detail', kwargs={'post_id': self.object.pk}
         )
 
 
 class PostDeleteView(
-    LoginRequiredMixin, UserPassesTestMixin, PostMixin, DeleteView
+    LoginRequiredMixin, AuthorMixin, PostMixin, DeleteView
 ):
     """CBV удаления публикации."""
-
-    def test_func(self):
-        """Функция для проверки автора."""
-        return self.get_object().author == self.request.user
-
-    def handle_no_permission(self):
-        """Если пользователь не автор."""
-        return redirect('blog:post_detail', post_id=self.get_object().pk)
 
     def get_context_data(self, **kwargs):
         """Фунция передачи данных контекста."""
@@ -165,27 +138,14 @@ class PostDeleteView(
 
     def get_success_url(self):
         """Функция для переадресации пользователя."""
-        return reverse_lazy(
+        return reverse(
             'blog:profile', args=[self.request.user.username]
         )
 
 
 # Комментарии
-class CommentMixin:
-    """Класс миксин для комментариев."""
-
-    model = Comment
-    form_class = CommentForm
-
-    def get_success_url(self):
-        """Функция для переадресации пользователя."""
-        return reverse_lazy(
-            'blog:post_detail', kwargs={"post_id": self.kwargs['post_id']}
-        )
-
-
 class CommentCreateView(
-    LoginRequiredMixin, CommentMixin, PostMixin, CreateView
+    LoginRequiredMixin,  CommentMixin, PostMixin, CreateView
 ):
     """CBV добавления комментария."""
 
@@ -200,43 +160,28 @@ class CommentCreateView(
     def form_valid(self, form):
         """Проверка валидности."""
         if form.is_valid():
+
             form.instance.author = self.request.user
             form.instance.post = self.post_obj
         return super().form_valid(form)
 
 
 class CommentUpdateView(
-    LoginRequiredMixin, UserPassesTestMixin, CommentMixin, UpdateView
+    LoginRequiredMixin, AuthorMixin, CommentMixin, UpdateView
 ):
     """CBV для редактирования комментария."""
 
     pk_url_kwarg = "comment_id"
     template_name = "blog/comment.html"
 
-    def test_func(self):
-        """Функция для проверки автора."""
-        return self.get_object().author == self.request.user
-
-    def handle_no_permission(self):
-        """Если пользователь не автор."""
-        return redirect("blog:post_detail", post_id=self.get_object().pk)
-
 
 class CommentDeleteView(
-    LoginRequiredMixin, UserPassesTestMixin, CommentMixin, DeleteView
+    LoginRequiredMixin, AuthorMixin, CommentMixin, DeleteView
 ):
     """CBV комментария."""
 
     pk_url_kwarg = "comment_id"
     template_name = "blog/comment.html"
-
-    def test_func(self):
-        """Функция для проверки автора."""
-        return self.get_object().author == self.request.user
-
-    def handle_no_permission(self):
-        """Если пользователь не автор."""
-        return redirect("blog:post_detail", post_id=self.get_object().pk)
 
 
 # Профиль
@@ -282,6 +227,6 @@ class EditProfile(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         """Функция для переадресации пользователя."""
-        return reverse_lazy(
+        return reverse(
             'blog:profile',
             kwargs={'username': self.request.user.username})

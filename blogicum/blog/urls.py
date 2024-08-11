@@ -1,6 +1,6 @@
 from django.urls import path
-from blog import views
 
+from blog import views
 
 app_name = 'blog'
 
@@ -31,7 +31,7 @@ urlpatterns = [
     path('posts/<int:post_id>/delete_comment/<int:comment_id>/',
          views.CommentDeleteView.as_view(), name='delete_comment'),
     # Адрес удаления комментария
-    path('profile/<slug:username>/', views.Profile.as_view(), name='profile'),
+    path('profile/<str:username>/', views.Profile.as_view(), name='profile'),
     # Адрес профиля
     path('edit_profile/', views.EditProfile.as_view(), name='edit_profile'),
     # Адрес изменения профиля
