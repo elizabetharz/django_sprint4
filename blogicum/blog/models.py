@@ -63,6 +63,7 @@ class Post(PublishedAndCreatedModel):
         User,
         on_delete=models.CASCADE,
         verbose_name='Автор публикации',
+        related_name='author'
     )
     location = models.ForeignKey(
         Location,
@@ -110,7 +111,9 @@ class Comment(models.Model):
         related_name='comments',
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='author'
+        )
 
     class Meta:
         """Метакласс."""
@@ -122,3 +125,4 @@ class Comment(models.Model):
     def __str__(self) -> str:
         """Строковое представление объекта."""
         return self.text[:MAX_LENGTH_RENDER_TITLE]
+
