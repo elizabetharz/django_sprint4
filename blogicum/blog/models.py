@@ -1,30 +1,12 @@
+from blog.constants import MAX_LENGTH_RENDER_TITLE, MAX_LENGTH_TITLE
 from core.models import PublishedAndCreatedModel
+
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 
-from blog.constants import MAX_LENGTH_RENDER_TITLE, MAX_LENGTH_TITLE
-
 User = get_user_model()
-
-
-class PostModel(models.Model):
-    """Абстрактная модель."""
-
-    is_published = models.BooleanField(
-        default=True,
-        help_text='Снимите галочку, чтобы скрыть публикацию.',
-        verbose_name='Опубликовано',
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True, verbose_name='Добавлено'
-    )
-
-    class Meta:
-        """Метакласс."""
-
-        abstract = True
 
 
 class Category(PublishedAndCreatedModel):
@@ -115,9 +97,7 @@ class Post(PublishedAndCreatedModel):
 
     def get_absolute_url(self):
         """Функция переадресацции."""
-        return reverse(
-            'blog:profile', kwargs={'username': self.request.user.username}
-        )
+        return reverse('blog:post_detail', kwargs={'slug': self.slug})
 
 
 class Comment(models.Model):
@@ -141,4 +121,4 @@ class Comment(models.Model):
 
     def __str__(self) -> str:
         """Строковое представление объекта."""
-        return self.title[:MAX_LENGTH_RENDER_TITLE]
+        return self.text[:MAX_LENGTH_RENDER_TITLE]

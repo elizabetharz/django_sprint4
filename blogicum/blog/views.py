@@ -1,3 +1,7 @@
+from blog.constants import MAX_POSTS_PAGE
+from blog.forms import CommentForm, PostForm
+from blog.mixins import AuthorMixin, BaseMixin, CommentMixin, PostMixin
+from blog.models import Category, Post, User
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count
 from django.shortcuts import get_object_or_404
@@ -7,35 +11,11 @@ from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
                                   UpdateView)
 from django.views.generic.edit import FormMixin
 
-from blog.constants import MAX_POSTS_PAGE
-from blog.forms import CommentForm, PostForm
-from blog.mixins import AuthorMixin, CommentMixin, PostMixin
-from blog.models import Category, Post, User
 
-
-class IndexListView(ListView):
+class IndexListView(BaseMixin, ListView):
     """CBV вывода постов на главную страницу."""
 
-    model = Post
     template_name = 'blog/index.html'
-    paginate_by = MAX_POSTS_PAGE
-
-    def get_queryset(self):
-        """Метод queryset."""
-        return (
-            Post.objects.select_related(
-                'location',
-                'author',
-                'category',
-            )
-            .filter(
-                is_published=True,
-                category__is_published=True,
-                pub_date__date__lte=timezone.now(),
-            )
-            .annotate(comment_count=Count('comments'))
-            .order_by('-pub_date')
-        )
 
 
 class PostDetailView(FormMixin, DetailView):
@@ -68,32 +48,32 @@ class PostDetailView(FormMixin, DetailView):
         )
 
 
-class CategoryView(ListView):
+class CategoryView(BaseMixin, ListView):
     """CBV страницы публикаций по категории."""
 
     template_name = 'blog/category.html'
-    paginate_by = MAX_POSTS_PAGE
+    model = Category
+    slug_field = 'slug'
+    slug_url_kwarg = 'category_slug'
+
+    def get_object(self):
+        """Функция для получения объекта категории."""
+        return get_object_or_404(
+            Category, is_published=True, slug=self.kwargs[self.slug_url_kwarg]
+        )
 
     def get_context_data(self, **kwargs):
-        """Фунция передачи данных контекста."""
+        """Функция передачи данных контекста."""
         context = super().get_context_data(**kwargs)
-        context['category'] = get_object_or_404(
-            Category, is_published=True, slug=self.kwargs['category_slug']
-        )
+        context['category'] = self.get_object()
         return context
 
     def get_queryset(self):
-        """Метод queryset."""
+        """Дополнительно фильтруем посты по категории."""
         return (
-            Post.objects.select_related('category')
-            .filter(
-                category__slug=self.kwargs['category_slug'],
-                is_published=True,
-                category__is_published=True,
-                pub_date__lte=timezone.now()
+            super().get_queryset().filter(
+                category__slug=self.kwargs[self.slug_url_kwarg]
             )
-            .annotate(comment_count=Count('comments'))
-            .order_by('-pub_date')
         )
 
 
@@ -149,21 +129,22 @@ class CommentCreateView(
 ):
     """CBV добавления комментария."""
 
-    def dispatch(self, request, *args, **kwargs):
+    def get_object(self):
         """Функция для получения объекта поста."""
         self.post_obj = get_object_or_404(
             Post,
             id=self.kwargs[self.pk_url_kwarg]
         )
-        return super().dispatch(request, *args, **kwargs)
+        return self.post_obj
 
     def form_valid(self, form):
         """Проверка валидности."""
         if form.is_valid():
-
             form.instance.author = self.request.user
-            form.instance.post = self.post_obj
-        return super().form_valid(form)
+            form.instance.post = self.get_object()
+            return super().form_valid(form)
+        else:
+            return super().form_invalid(form)
 
 
 class CommentUpdateView(
@@ -197,10 +178,22 @@ class Profile(ListView):
             User,
             username=self.kwargs['username']
         )
-        return (Post.objects.filter(author=self.author.id)
+        if self.request.user == self.author:
+            return (
+                Post.objects.filter(author=self.author)
                 .annotate(comment_count=Count('comments'))
                 .order_by('-pub_date')
+            )
+        else:
+            return (
+                Post.objects.filter(
+                    author=self.author,
+                    is_published=True,
+                    pub_date__lte=timezone.now()
                 )
+                .annotate(comment_count=Count('comments'))
+                .order_by('-pub_date')
+            )
 
     def get_context_data(self, **kwargs):
         """Фунция передачи данных контекста."""
