@@ -52,8 +52,6 @@ class CategoryView(BaseMixin, ListView):
     """CBV страницы публикаций по категории."""
 
     template_name = 'blog/category.html'
-    model = Category
-    slug_field = 'slug'
     slug_url_kwarg = 'category_slug'
 
     def get_object(self):
@@ -70,11 +68,8 @@ class CategoryView(BaseMixin, ListView):
 
     def get_queryset(self):
         """Дополнительно фильтруем посты по категории."""
-        return (
-            super().get_queryset().filter(
-                category__slug=self.kwargs[self.slug_url_kwarg]
-            )
-        )
+        category = self.get_object()
+        return super().get_queryset().filter(category=category)
 
 
 # Посты
@@ -181,19 +176,20 @@ class Profile(ListView):
         if self.request.user == self.author:
             return (
                 Post.objects.filter(author=self.author)
+                .select_related('author')
                 .annotate(comment_count=Count('comments'))
                 .order_by('-pub_date')
             )
-        else:
-            return (
-                Post.objects.filter(
-                    author=self.author,
-                    is_published=True,
-                    pub_date__lte=timezone.now()
-                )
-                .annotate(comment_count=Count('comments'))
-                .order_by('-pub_date')
+        return (
+            Post.objects.filter(
+                author=self.author,
+                is_published=True,
+                pub_date__lte=timezone.now()
             )
+            .select_related('author')
+            .annotate(comment_count=Count('comments'))
+            .order_by('-pub_date')
+        )
 
     def get_context_data(self, **kwargs):
         """Фунция передачи данных контекста."""
