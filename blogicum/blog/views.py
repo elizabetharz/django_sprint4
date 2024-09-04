@@ -176,7 +176,7 @@ class Profile(ListView):
         if self.request.user == self.author:
             return (
                 Post.objects.filter(author=self.author)
-                .select_related('author')
+                .select_related('author', 'category', 'location')
                 .annotate(comment_count=Count('comments'))
                 .order_by('-pub_date')
             )

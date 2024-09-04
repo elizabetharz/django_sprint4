@@ -1,11 +1,10 @@
-from blog.constants import MAX_LENGTH_RENDER_TITLE, MAX_LENGTH_TITLE
-
 from core.models import PublishedAndCreatedModel
-
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
+
+from blog.constants import MAX_LENGTH_RENDER_TITLE, MAX_LENGTH_TITLE
 
 User = get_user_model()
 
@@ -64,7 +63,7 @@ class Post(PublishedAndCreatedModel):
         User,
         on_delete=models.CASCADE,
         verbose_name='Автор публикации',
-        related_name='authors'
+        related_name='posts'
     )
     location = models.ForeignKey(
         Location,
@@ -72,14 +71,14 @@ class Post(PublishedAndCreatedModel):
         blank=True,
         on_delete=models.SET_NULL,
         verbose_name='Местоположение',
-        related_name='locations'
+        related_name='posts'
     )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
         null=True,
         verbose_name='Категория',
-        related_name='categories'
+        related_name='posts'
     )
 
     image = models.ImageField(
@@ -101,7 +100,7 @@ class Post(PublishedAndCreatedModel):
 
     def get_absolute_url(self):
         """Функция переадресацции."""
-        return reverse('blog:post_detail', kwargs={'id': self.slug})
+        return reverse('blog:post_detail', kwargs={'id': self.id})
 
 
 class Comment(models.Model):
